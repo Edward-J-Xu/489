@@ -27,15 +27,13 @@ _my_colors = np.array([
 ], dtype=float) / 255
 
 
-def play_wav(wav, blocking=True):
-    try:
-        import sounddevice as sd
-        # Small bug with sounddevice.play: the audio is cut 0.5 second too early. We pad it to 
-        # make up for that
-        wav = np.concatenate((wav, np.zeros(sampling_rate // 2)))
-        sd.play(wav, sampling_rate, blocking=blocking)
-    except Exception as e:
-        print("Failed to play audio: %s" % repr(e))
+# def play_wav(wav, blocking=True):
+#     try:
+#         import sounddevice as sd
+#         wav = np.concatenate((wav, np.zeros(sampling_rate // 2)))
+#         sd.play(wav, sampling_rate, blocking=blocking)
+#     except Exception as e:
+#         print("Failed to play audio: %s" % repr(e))
 
 
 def plot_similarity_matrix(matrix, labels_a=None, labels_b=None, ax: plt.Axes=None, title="", left=0.4, right=1):
@@ -52,7 +50,8 @@ def plot_similarity_matrix(matrix, labels_a=None, labels_b=None, ax: plt.Axes=No
         ax.set_xticklabels(labels_a, rotation=90)
     if labels_b is not None:
         ax.set_yticks(range(len(labels_b)))
-        ax.set_yticklabels(labels_b[::-1])  # Upper origin -> reverse y axis
+        # Upper origin -> reverse y axis
+        ax.set_yticklabels(labels_b[::-1])
     ax.set_title(title)
 
     cax = make_axes_locatable(ax).append_axes("right", size="5%", pad=0.15)
@@ -64,9 +63,7 @@ def plot_similarity_matrix(matrix, labels_a=None, labels_b=None, ax: plt.Axes=No
     
     
 def plot_histograms(all_samples, ax=None, names=None, title="", left=0.35, right=1):
-    """
-    Plots (possibly) overlapping histograms and their median 
-    """
+
     if ax is None:
         _, ax = plt.subplots()
     
@@ -91,13 +88,10 @@ def plot_projections(embeds, speakers, ax=None, colors=None, markers=None, legen
                      title="", **kwargs):
     if ax is None:
         _, ax = plt.subplots(figsize=(6, 6))
-        
-    # Compute the 2D projections. You could also project to another number of dimensions (e.g. 
-    # for a 3D plot) or use a different different dimensionality reduction like PCA or TSNE.
+
     reducer = UMAP(**kwargs)
     projs = reducer.fit_transform(embeds)
     
-    # Draw the projections
     speakers = np.array(speakers)
     colors = colors or _my_colors
     for i, speaker in enumerate(np.unique(speakers)):
@@ -116,70 +110,66 @@ def plot_projections(embeds, speakers, ax=None, colors=None, markers=None, legen
     return projs
     
 
-def interactive_diarization(similarity_dict, wav, wav_splits, x_crop=5, show_time=False):
-    fig, ax = plt.subplots()
-    lines = [ax.plot([], [], label=name)[0] for name in similarity_dict.keys()]
-    text = ax.text(0, 0, "", fontsize=10)
+# def interactive_diarization(similarity_dict, wav, wav_splits, x_crop=5, show_time=False):
+#     fig, ax = plt.subplots()
+#     lines = [ax.plot([], [], label=name)[0] for name in similarity_dict.keys()]
+#     text = ax.text(0, 0, "", fontsize=10)
     
-    def init():
-        ax.set_ylim(0.4, 1)
-        ax.set_ylabel("Similarity")
-        if show_time:
-            ax.set_xlabel("Time (seconds)")
-        else:
-            ax.set_xticks([])
-        ax.set_title("Diarization")
-        ax.legend(loc="lower right")
-        return lines + [text]
+#     def init():
+#         ax.set_ylim(0.4, 1)
+#         ax.set_ylabel("Similarity")
+#         if show_time:
+#             ax.set_xlabel("Time (seconds)")
+#         else:
+#             ax.set_xticks([])
+#         ax.set_title("Diarization")
+#         ax.legend(loc="lower right")
+#         return lines + [text]
     
-    times = [((s.start + s.stop) / 2) / sampling_rate for s in wav_splits]
-    rate = 1 / (times[1] - times[0])
-    crop_range = int(np.round(x_crop * rate))
-    ticks = np.arange(0, len(wav_splits), rate)
-    ref_time = timer()
+#     times = [((s.start + s.stop) / 2) / sampling_rate for s in wav_splits]
+#     rate = 1 / (times[1] - times[0])
+#     crop_range = int(np.round(x_crop * rate))
+#     ticks = np.arange(0, len(wav_splits), rate)
+#     ref_time = timer()
     
-    def update(i):
-        # Crop plot
-        crop = (max(i - crop_range // 2, 0), i + crop_range // 2)
-        ax.set_xlim(i - crop_range // 2, crop[1])
-        if show_time:
-            crop_ticks = ticks[(crop[0] <= ticks) * (ticks <= crop[1])]
-            ax.set_xticks(crop_ticks)
-            ax.set_xticklabels(np.round(crop_ticks / rate).astype(np.int))
+#     def update(i):
+#         crop = (max(i - crop_range // 2, 0), i + crop_range // 2)
+#         ax.set_xlim(i - crop_range // 2, crop[1])
+#         if show_time:
+#             crop_ticks = ticks[(crop[0] <= ticks) * (ticks <= crop[1])]
+#             ax.set_xticks(crop_ticks)
+#             ax.set_xticklabels(np.round(crop_ticks / rate).astype(np.int))
 
-        # Plot the prediction
-        similarities = [s[i] for s in similarity_dict.values()]
-        best = np.argmax(similarities)
-        name, similarity = list(similarity_dict.keys())[best], similarities[best]
-        if similarity > 0.75:
-            message = "Speaker: %s (confident)" % name
-            color = _default_colors[best]
-        elif similarity > 0.65:
-            message = "Speaker: %s (uncertain)" % name
-            color = _default_colors[best]
-        else:
-            message = "Unknown/No speaker"
-            color = "black"
-        text.set_text(message)
-        text.set_c(color)
-        text.set_position((i, 0.96))
+#         similarities = [s[i] for s in similarity_dict.values()]
+#         best = np.argmax(similarities)
+#         name, similarity = list(similarity_dict.keys())[best], similarities[best]
+#         if similarity > 0.75:
+#             message = "Speaker: %s (confident)" % name
+#             color = _default_colors[best]
+#         elif similarity > 0.65:
+#             message = "Speaker: %s (uncertain)" % name
+#             color = _default_colors[best]
+#         else:
+#             message = "Unknown/No speaker"
+#             color = "black"
+#         text.set_text(message)
+#         text.set_c(color)
+#         text.set_position((i, 0.96))
         
-        # Plot data
-        for line, (name, similarities) in zip(lines, similarity_dict.items()):
-            line.set_data(range(crop[0], i + 1), similarities[crop[0]:i + 1])
+#         for line, (name, similarities) in zip(lines, similarity_dict.items()):
+#             line.set_data(range(crop[0], i + 1), similarities[crop[0]:i + 1])
         
-        # Block to synchronize with the audio (interval is not reliable)
-        current_time = timer() - ref_time
-        if current_time < times[i]:
-            sleep(times[i] - current_time)
-        elif current_time - 0.2 > times[i]:
-            print("Animation is delayed further than 200ms!", file=stderr)
-        return lines + [text]
+#         current_time = timer() - ref_time
+#         if current_time < times[i]:
+#             sleep(times[i] - current_time)
+#         elif current_time - 0.2 > times[i]:
+#             print("Animation is delayed further than 200ms!", file=stderr)
+#         return lines + [text]
     
-    ani = FuncAnimation(fig, update, frames=len(wav_splits), init_func=init, blit=not show_time,
-                        repeat=False, interval=1)
-    play_wav(wav, blocking=False)
-    plt.show()
+#     ani = FuncAnimation(fig, update, frames=len(wav_splits), init_func=init, blit=not show_time,
+#                         repeat=False, interval=1)
+#     play_wav(wav, blocking=False)
+#     plt.show()
 
 
 def plot_embedding_as_heatmap(embed, ax=None, title="", shape=None, color_range=(0, 0.30)):
