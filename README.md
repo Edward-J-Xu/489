@@ -1,2 +1,8 @@
-# 489
-CS 489 Final Project, trained model is in [hugginface](https://huggingface.co/e32xu/Stefanie_Sun/).
+# Comparison of Different F0 Predictors for Singer Voice Conversion
+Trained model is in [hugginface](https://huggingface.co/e32xu/Stefanie_Sun/).
+
+Fundamental frequency (F0) prediction plays a pivotal role in voice conversion, particularly in the domain of singing voice transformation. The ability to accurately estimate F0 from audio signals is essential for maintaining the melodic integrity and tonal quality of a voice during conversion processes. In this report, we delve into a comparative study of various F0 predictors within the context of Singer Voice Conversion using the SoftVC VITS Singing Voice Conversion (So-VITS-SVC) framework.
+
+The task of singer voice conversion involves transforming the vocal characteristics of one singer into those of another while maintaining the original melodic and expressive qualities of the source voice. Fundamental frequency (F0) serves as a fundamental component of a singer's voice, representing the pitch variation essential for conveying melody and emotion. Accurately predicting F0 is therefore crucial for achieving convincing and natural-sounding voice conversions.
+
+Our approach centers on evaluating different F0 predictors within the So-VITS-SVC framework to assess their effectiveness in singer voice conversion. By comparing and analyzing various F0 prediction algorithms, we aim to identify the predictors that best preserve the melodic integrity and overall quality of a singer's voice during the conversion process. The code for this project is a bit too complex to explain in this short report, but in each section I have links to the code used.
